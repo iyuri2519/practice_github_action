@@ -6,7 +6,7 @@ on:
       - test/github-actions
   workflow_dispatch:
   schedule:
-    - cron: '3-58/5 * * * *'
+    - cron: '3,13,23,33,43,53 * * * *'
       timezone: 'Asia/Seoul'
 
 jobs:
