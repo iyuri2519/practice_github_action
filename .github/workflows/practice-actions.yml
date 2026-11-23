@@ -13,8 +13,40 @@ jobs:
   smoke-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Print trigger and time
+      - name: Save Samsung Electronics quote
         run: |
           echo "Trigger: $GITHUB_EVENT_NAME"
           echo "Ref: $GITHUB_REF"
-          TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S %Z'
+          python3 - <<'PY'
+          import json
+          from datetime import datetime
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from zoneinfo import ZoneInfo
+
+          quote_url = 'https://polling.finance.naver.com/api/realtime/domestic/stock/005930'
+          executed_at = datetime.now(ZoneInfo('Asia/Seoul'))
+          request = Request(quote_url, headers={'Accept': 'application/json'})
+          with urlopen(request, timeout=15) as response:
+              quote, = json.load(response)['datas']
+
+          snapshot = {
+              'executed_at': executed_at.isoformat(timespec='seconds'),
+              'quote_at': quote['localTradedAt'],
+              'stock_code': quote['itemCode'],
+              'stock_name': quote['stockName'],
+              'price_krw': int(quote['closePrice'].replace(',', '')),
+              'market_status': quote['marketStatus'],
+              'source': quote_url,
+          }
+          output = json.dumps(snapshot, ensure_ascii=False, indent=2)
+          Path('samsung-electronics.json').write_text(output + '\n', encoding='utf-8')
+          print(output)
+          PY
+
+      - name: Upload quote JSON
+        uses: actions/upload-artifact@v7
+        with:
+          name: samsung-electronics-${{ github.run_attempt }}
+          path: samsung-electronics.json
+          if-no-files-found: error
