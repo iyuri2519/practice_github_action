@@ -1,0 +1,20 @@
+name: Practice GitHub Actions
+
+on:
+  push:
+    branches:
+      - test/github-actions
+  workflow_dispatch:
+  schedule:
+    - cron: '3-58/5 * * * *'
+      timezone: 'Asia/Seoul'
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print trigger and time
+        run: |
+          echo "Trigger: $GITHUB_EVENT_NAME"
+          echo "Ref: $GITHUB_REF"
+          TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S %Z'
